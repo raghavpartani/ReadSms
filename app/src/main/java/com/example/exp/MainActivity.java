@@ -23,8 +23,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Locale;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -33,7 +38,6 @@ public class MainActivity extends AppCompatActivity {
 
     //ye bhi add krna
     Spinner month;
-    Spinner year;
 
     ArrayAdapter<String>adapter;
     ArrayList<String> lst1=new ArrayList<>();
@@ -44,43 +48,37 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         lv=findViewById(R.id.msz);
-//        new code
-        month=findViewById(R.id.month);
-        year=findViewById(R.id.year);
 
-        ArrayList<String>years=new ArrayList<>();
-        years.add("2021");
-        years.add("2020");
-        years.add("2019");
+        month=findViewById(R.id.month);
+        Calendar c = Calendar.getInstance();
+        int curyear = c.get(Calendar.YEAR);
+        int curmonth = c.get(Calendar.MONTH);
 
         ArrayList<String> months = new ArrayList<>();
-        months.add("Jan");
-        months.add("Feb");
-        months.add("Mar");
-        months.add("Apr");
-        months.add("May");
-        months.add("Jun");
-        months.add("Jul");
-        months.add("Aug");
-        months.add("Sep");
-        months.add("Oct");
-        months.add("Nov");
-        months.add("Dec");
+
+        Calendar cc = new GregorianCalendar();
+        cc.setTime(new Date());
+        for(int i=0;i<24;i++) {
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM YYYY");
+            months.add(sdf.format(cc.getTime()));   // NOW
+            cc.add(Calendar.MONTH, -1);
+        }
 
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, months);
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         month.setAdapter(arrayAdapter);
+
         month.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String monthname = parent.getItemAtPosition(position).toString();
-  //              Toast.makeText(parent.getContext(), "Selected: " + monthname,          Toast.LENGTH_LONG).show();
-
+                Toast.makeText(parent.getContext(), "Selected: " + monthname,          Toast.LENGTH_LONG).show();
+                String SelectedDate[]=month.getSelectedItem().toString().split(" ",2);
                 if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_SMS}, 1);
                 }
                 else {
-                    msgData = getAllSms(MainActivity.this,month.getSelectedItem().toString(),year.getSelectedItem().toString());
+                    msgData = getAllSms(MainActivity.this,SelectedDate[0],SelectedDate[1]);
                 }
             }
             @Override
@@ -88,32 +86,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        ArrayAdapter<String> yeararrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, years);
-        yeararrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        year.setAdapter(yeararrayAdapter);
-        year.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String yearname = parent.getItemAtPosition(position).toString();
-//                Toast.makeText(parent.getContext(), "Selected: " + yearname,Toast.LENGTH_LONG).show();
-
-                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_SMS}, 1);
-                }
-                else {
-                    msgData = getAllSms(MainActivity.this,month.getSelectedItem().toString(),year.getSelectedItem().toString());
-                }
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
-//yha tk h
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_SMS}, 1);
         }
         else {
-            msgData = getAllSms(this,month.getSelectedItem().toString(),year.getSelectedItem().toString());
+            String SelectedDate[]=month.getSelectedItem().toString().split(" ",2);
+            msgData = getAllSms(this,SelectedDate[0],SelectedDate[1]);
         }
 
 
@@ -135,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
                     String smsDate = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.DATE));
                     String number = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS));
                     String body = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.BODY));
+                    String bodylowercase=body.toLowerCase();
                     Date dateFormat= new Date(Long.valueOf(smsDate));
                     long millisecond = Long.parseLong(smsDate);
 
@@ -162,9 +141,24 @@ public class MainActivity extends AppCompatActivity {
 
                                         if (body.contains("credited ") || body.contains("debited ") || body.contains("Paid ") || body.contains("paid ") || body.contains("credited") || body.contains("debited") || body.contains("Avail") || body.contains("Avail ") || body.contains("spent") || body.contains("spent ")) {
                                        //ye wla if block lgana h tko
-                                            if(splitedate[1].trim().equals(month)&&splitedate[2].trim().equals(year))
-                                            lst.add(dateString + number + body);
-                                            s = s + dateString + number + body;
+                                            if(splitedate[1].trim().equals(month)&&splitedate[2].trim().equals(year)) {
+                                                int amount;
+                                                String amts="";
+                                                if(bodylowercase.contains("rs")){
+                                                    String amt[]=bodylowercase.split("rs.",2);
+                                                    for(int i=0;i<amt[1].length();i++){
+                                                        if(amt[1].charAt(i)>=48&&amt[1].charAt(i)<=57||amt[1].charAt(i)==' '){
+                                                           amts=amts+ amt[1].charAt(i);
+                                                        }
+                                                        else{
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                lst.add(dateString + number + body+amts);
+                                                s = s + dateString + number + body;
+                                            }
+
 
                                             //bank ka naam print krega
                                             if(number.contains("IDFC")) {
