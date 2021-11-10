@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
                                                 ban = ban + "SBI Bank";
                                             }
                                             else if(number.contains("HDFC")) {
-                                                ban = ban + "HDFC Bank";
+                                                ban = ban + "HDFC Bank" ;
                                             }
                                             else if(number.contains("ICICI")) {
                                                 ban = ban + "ICICI Bank";
