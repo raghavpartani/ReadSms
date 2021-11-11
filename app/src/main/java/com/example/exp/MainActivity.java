@@ -22,11 +22,14 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.net.CacheRequest;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -37,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayAdapter<String> adapter;
     ArrayList<String> lst1 = new ArrayList<>();
     static String amts = "";
+    String avail = "";
     static String amtsfordisplay = "";
     static boolean isdebited = false;
 
@@ -97,6 +101,9 @@ public class MainActivity extends AppCompatActivity {
         int count = 0;
         String s = "";
         String ban = "";
+        Pattern regEx = Pattern.compile("(?=.*[Aa]ccount.*|.*[Aa]/[Cc].*|.*[Aa][Cc][Cc][Tt].*|.*[Cc][Aa][Rr][Dd].*)(?=.*[Cc]redit.*|.*[Dd]ebit.*)(?=.*[Ii][Nn][Rr].*|.*[Rr][Ss].*)");
+
+
         if (c != null) {
             totalSMS = c.getCount();
             if (c.moveToFirst()) {
@@ -115,65 +122,38 @@ public class MainActivity extends AppCompatActivity {
                     switch (Integer.parseInt(c.getString(c.getColumnIndexOrThrow(Telephony.Sms.TYPE)))) {
                         case Telephony.Sms.MESSAGE_TYPE_INBOX:
                             type = "inbox";
+
                             if (number.length() == 10 || number.length() == 13) {
                                 s = s + "NULL message";
                             } else {
+                                Matcher m = regEx.matcher(bodylowercase);
                                 amts = "";
                                 amtsfordisplay = "";
-                                if (bodylowercase.contains(" rs") || bodylowercase.contains(" rs ") || bodylowercase.contains("rs") || bodylowercase.contains(" rs.") || bodylowercase.contains(" inr") || bodylowercase.contains(" inr ")) {
-
-                                    if (bodylowercase.contains("a/c ") || bodylowercase.contains("ac ") || bodylowercase.contains(" a/c") || bodylowercase.contains(" ac") || bodylowercase.contains("a/c") || bodylowercase.contains(" ac ") || bodylowercase.contains("curr o/s")) {
-
-                                        if (bodylowercase.contains("credited ") || bodylowercase.contains("debited ") || bodylowercase.contains("paid ") || bodylowercase.contains(" paid ") || bodylowercase.contains("credited") || bodylowercase.contains("debited") || bodylowercase.contains("avail") || bodylowercase.contains("avail ") || bodylowercase.contains("spent") || bodylowercase.contains("spent ") || bodylowercase.contains("received") || bodylowercase.contains("received ") || bodylowercase.contains(" received ")) {
-                                            //ye wla if block lgana h tko
-                                            if (splitedate[1].trim().equals(month) && splitedate[2].trim().equals(year)) {
-                                                if (bodylowercase.contains("debited") || bodylowercase.contains("paid")) {
-                                                    amts = getamts(bodylowercase, "debited");
-                                                }
-                                                //abhi credited ka
-                                                else if (bodylowercase.contains("credited") || bodylowercase.contains("received")) {
-                                                    amts = getamts(bodylowercase, "credited");
-                                                }
-                                                lst.add(dateString + " " + number + " " + body + " " + amts);
-                                                s = s + dateString + number + body;
-                                            }
 
 
-                                            //bank ka naam print krega
-                                            if (number.contains("IDFC")) {
-                                                ban = ban + "IDFC Bank";
-                                            } else if (number.contains("SBI")) {
-                                                ban = ban + "SBI Bank";
-                                            } else if (number.contains("HDFC")) {
-                                                ban = ban + "HDFC Bank";
-                                            } else if (number.contains("ICICI")) {
-                                                ban = ban + "ICICI Bank";
-                                            } else {
-                                                ban = ban + "NULL Bank";
-                                            }
-                                            // bank ka naam wala khtm
-
-                                            //debit wale transactions
-                                            if (body.contains("debited") || body.contains(" debited ")) {
-                                                count++;
-                                                lst1.add("debited " + count);
-                                            }
+                                if (m.find()) {
+                                    Toast.makeText(context, "" + m.group(), Toast.LENGTH_SHORT).show();
+                                    if (splitedate[1].trim().equals(month) && splitedate[2].trim().equals(year)) {
+                                        if (bodylowercase.contains("debited") || bodylowercase.contains("paid")) {
+                                            amts = getamts(bodylowercase, "debited");
+                                            avail = getavail(bodylowercase);
                                         }
-                                        //cred wale ka else
-                                        else {
-                                            s = s + "NULL message";
+                                        //abhi credited ka
+                                        else if (bodylowercase.contains("credited") || bodylowercase.contains("received")) {
+                                            amts = getamts(bodylowercase, "credited");
+                                            avail = getavail(bodylowercase);
                                         }
+                                        lst.add(dateString + " " + number + " " + body + " " + amts + " " + avail);
+                                        s = s + dateString + number + body;
                                     }
-                                    //ac wale ka else
-                                    else {
-                                        s = s + "NULL message";
+
+
+                                    //debit wale transactions
+                                    if (body.contains("debited") || body.contains(" debited ")) {
+                                        count++;
+                                        lst1.add("debited " + count);
                                     }
                                 }
-                                //rs wale ka else
-                                else {
-                                    s = s + "NULL message";
-                                }
-                                // number ki length wale ka else
                             }
                             break;
 //                        case Telephony.Sms.MESSAGE_TYPE_SENT:
@@ -186,10 +166,10 @@ public class MainActivity extends AppCompatActivity {
                             break;
                     }
                     c.moveToNext();
+
                 }
 
             }
-            Toast.makeText(context, "" + ban, Toast.LENGTH_LONG).show();
             c.close();
 
         } else {
@@ -199,6 +179,54 @@ public class MainActivity extends AppCompatActivity {
         lv.setAdapter(adapter);
 
         return s;
+    }
+
+    private String getavail(String body) {
+        String availAmtfordisplay = "";
+        String availAmt = "";
+        String[] avail = {};
+        String amt[]={};
+        boolean toggle=false;
+        if (body.contains("inr") && body.contains("bal")) {
+          amt = body.split("inr", 2);
+            //ye agar balance inr me h to
+            if (amt[1].contains("inr")) {
+                avail =amt[1].split("inr", 2);
+                toggle=true;
+            }
+            //ye agar balance rs me h to
+            else if (amt[1].contains("rs")) {
+                 avail=amt[1].split("rs", 2);
+                 toggle=true;
+            }
+        } else if (body.contains("rs") && body.contains("bal")) {
+              amt = body.split("rs", 2);
+            if (amt[1].contains("inr")) {
+                avail = amt[1].split("inr", 2);
+                toggle=true;
+            } else if (amt[1].contains("rs")) {
+                avail = amt[1].split("rs", 2);
+                toggle=true;
+            }
+        }
+        if(toggle) {
+            for (int i = 0; i < avail[1].length(); i++) {
+                if (avail[1].charAt(i) >= 48 && avail[1].charAt(i) <= 57 || avail[1].charAt(i) == ' ' || avail[1].charAt(i) == ',' || avail[1].charAt(i) == '.') {
+                    if (avail[1].charAt(i) == ',') {
+                        availAmtfordisplay = availAmtfordisplay + avail[1].charAt(i);
+                    } else {
+                        availAmt = availAmt + avail[1].charAt(i);
+                        availAmtfordisplay = availAmtfordisplay + avail[1].charAt(i);
+                    }
+                } else {
+                    break;
+                }
+            }
+            //ye akhri wala dot htane k liye
+            availAmt = availAmt.substring(0, availAmt.length() - 2);
+        }//ye available amount print krne k liye
+        availAmt = "\navailable amount" + availAmt;
+        return availAmt;
     }
 //
 //    private String getamts(String bodylowercase, String creordeb) {
