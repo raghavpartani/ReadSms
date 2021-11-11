@@ -117,11 +117,8 @@ public class MainActivity extends AppCompatActivity {
                             if (number.length() == 10 || number.length() == 13) {
                                 s = s + "NULL message";
                             } else {
-
-
                                 amts = "";
                                 amtsfordisplay = "";
-
                                 if (bodylowercase.contains(" rs") || bodylowercase.contains(" rs ") || bodylowercase.contains("rs") || bodylowercase.contains(" rs.") || bodylowercase.contains(" inr") || bodylowercase.contains(" inr ")) {
 
                                     if (bodylowercase.contains("a/c ") || bodylowercase.contains("ac ") || bodylowercase.contains(" a/c") || bodylowercase.contains(" ac") || bodylowercase.contains("a/c") || bodylowercase.contains(" ac ") || bodylowercase.contains("curr o/s")) {
@@ -177,7 +174,6 @@ public class MainActivity extends AppCompatActivity {
                                 }
                                 // number ki length wale ka else
                             }
-
                             break;
 //                        case Telephony.Sms.MESSAGE_TYPE_SENT:
 //                            type = "sent";
@@ -206,6 +202,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String getamts(String bodylowercase, String creordeb) {
         String amt[] = {};
+        amtsfordisplay="";
         if (bodylowercase.contains("inr")) {
             amt = bodylowercase.split("inr", 2);
         } else if (bodylowercase.contains("rs")) {
