@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> lst1 = new ArrayList<>();
     static String amts = "";
     static String amtsfordisplay = "";
+    static boolean isdebited = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -201,28 +202,95 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String getamts(String bodylowercase, String creordeb) {
-        String amt[] = {};
-        amtsfordisplay="";
-        if (bodylowercase.contains("inr")) {
-            amt = bodylowercase.split("inr", 2);
-        } else if (bodylowercase.contains("rs")) {
-            amt = bodylowercase.split("rs", 2);
+        ArrayList<Double> ans = extract(bodylowercase);
+        //System.out.println(ans);
+        String ans1="";
+        for (int i = 0; i < ans.size(); i++) {
+            if (i == 0) {
+                ans1=creordeb+" amount is " + ans.get(i);
+            } else if (i == 1) {
+                ans1=ans1+"remaining amount is " + ans.get(i);
+            }
         }
-        for (int i = 0; i < amt[1].length(); i++) {
-            if (amt[1].charAt(i) >= 48 && amt[1].charAt(i) <= 57 || amt[1].charAt(i) == ' ' || amt[1].charAt(i) == ',' || amt[1].charAt(i) == '.') {
-                if (amt[1].charAt(i) == ',') {
-                    amtsfordisplay = amtsfordisplay + amt[1].charAt(i);
-                } else {
-                    amts = amts + amt[1].charAt(i);
-                    amtsfordisplay = amtsfordisplay + amt[1].charAt(i);
-                }
-            } else {
+        return ans1;
+    }
+
+    public static ArrayList<Double> extract(String s) {
+
+        String[] sarr = s.split(" ");
+
+        isdebited = false;
+
+        ArrayList<Double> results = new ArrayList<>();
+        for(String val:sarr) {
+
+            if(val.equals("debited"))
+                isdebited = true;
+
+            if(val.length()>0)
+                if(val.charAt(0)>=48 && val.charAt(0)<=(48+9))
+                    if(isNumber(val))
+                        results.add(makeNum(val));
+        }
+        return results;
+    }
+
+    public static boolean isNumber(String s) {
+        boolean Num = true;
+        String num = "";
+        double ans = 0.0;
+        for(int i = 0 ; i <s.length();i++)
+        {
+            if(!((s.charAt(i)>=48 && s.charAt(i)<=(48+9)) || s.charAt(i)==',' || s.charAt(i)=='.'))
+            {
+                Num = false;
                 break;
             }
         }
-        amts = "\n" + creordeb + " amount" + amts;
-        return amts;
+
+        return Num;
     }
 
+    public static double makeNum(String s) {
+        String num = "";
+        for(int i = 0 ; i < s.length();i++) {
+            if(s.charAt(i)!=',')
+                num = num + s.charAt(i);
+        }
 
+        double ans = 0.0;
+        if(num.charAt(num.length()-1)=='.')
+            num = num.substring(0,num.length()-1);
+
+        ans =  (Double.parseDouble(num));
+        return ans;
+    }
 }
+
+//    private String getamts(String bodylowercase, String creordeb) {
+//        String amt[] = {};
+//        amtsfordisplay="";
+//        if (bodylowercase.contains("inr")) {
+//            amt = bodylowercase.split("inr", 2);
+//        } else if (bodylowercase.contains("rs")) {
+//            amt = bodylowercase.split("rs", 2);
+//        }
+//        for (int i = 0; i < amt[1].length(); i++) {
+//            if (amt[1].charAt(i) >= 48 && amt[1].charAt(i) <= 57 || amt[1].charAt(i) == ' ' || amt[1].charAt(i) == ',' || amt[1].charAt(i) == '.') {
+//                if (amt[1].charAt(i) == ',') {
+//                    amtsfordisplay = amtsfordisplay + amt[1].charAt(i);
+//                } else {
+//                    amts = amts + amt[1].charAt(i);
+//                    amtsfordisplay = amtsfordisplay + amt[1].charAt(i);
+//                }
+//            } else {
+//                break;
+//            }
+//        }
+//        amts = "\n" + creordeb + " amount" + amts;
+//        return amts;
+//    }
+
+
+
+
