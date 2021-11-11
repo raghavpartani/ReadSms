@@ -189,22 +189,13 @@ public class MainActivity extends AppCompatActivity {
         boolean toggle=false;
         if (body.contains("inr") && body.contains("bal")) {
           amt = body.split("inr", 2);
-            //ye agar balance inr me h to
             if (amt[1].contains("inr")) {
                 avail =amt[1].split("inr", 2);
                 toggle=true;
             }
-            //ye agar balance rs me h to
-            else if (amt[1].contains("rs")) {
-                 avail=amt[1].split("rs", 2);
-                 toggle=true;
-            }
         } else if (body.contains("rs") && body.contains("bal")) {
               amt = body.split("rs", 2);
-            if (amt[1].contains("inr")) {
-                avail = amt[1].split("inr", 2);
-                toggle=true;
-            } else if (amt[1].contains("rs")) {
+              if (amt[1].contains("rs")) {
                 avail = amt[1].split("rs", 2);
                 toggle=true;
             }
@@ -224,9 +215,11 @@ public class MainActivity extends AppCompatActivity {
             }
             //ye akhri wala dot htane k liye
             availAmt = availAmt.substring(0, availAmt.length() - 2);
+            availAmt = "\navailable amount" + availAmt;
+            return availAmt;
         }//ye available amount print krne k liye
-        availAmt = "\navailable amount" + availAmt;
-        return availAmt;
+        return "null";
+
     }
 //
 //    private String getamts(String bodylowercase, String creordeb) {
